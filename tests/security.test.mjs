@@ -24,6 +24,6 @@ test("default persona is Indonesian and does not leak secrets", () => {
   assert.doesNotMatch(prompt, /AIza|AQ\./);
 });
 
-test("default Gemini model is Gemini 3.1 Flash", () => {
-  assert.equal(DEFAULT_GEMINI_MODEL, "gemini-3.1-flash");
+test("default Gemini model is a real Gemini 3.1 Flash model", () => {
+  assert.equal(DEFAULT_GEMINI_MODEL, "gemini-3.1-flash-lite");
 });

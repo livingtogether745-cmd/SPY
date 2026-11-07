@@ -12,7 +12,9 @@ Repo awal (`livingtogether745-cmd/SPY`) **kosong**: 0 commit dan 0 file. Karena 
 - Tanpa hardcoded API key atau token.
 - Hanya dua host keluar: `api.telegram.org` dan `generativelanguage.googleapis.com`.
 
-Kode sudah lolos `npm run check` (syntax) dan `npm test` (unit test lokal). Koneksi live ke Telegram dan Gemini **belum diverifikasi** karena membutuhkan deploy dan API key yang valid.
+Kode sudah lolos `npm run check` (syntax) dan `npm test` (unit test lokal). Integrasi Gemini juga sudah diverifikasi live: API key valid, daftar model berhasil dibaca, dan model `gemini-3.1-flash-lite` membalas dengan benar. Koneksi Telegram **belum diverifikasi** karena masih menunggu bot token dari @BotFather.
+
+Catatan model: Google tidak menyediakan ID `gemini-3.1-flash` (tanpa suffix). Model Flash 3.1 yang benar-benar ada adalah `gemini-3.1-flash-lite`. Kalau mau model yang lebih baru, tersedia `gemini-3.5-flash` dan `gemini-3.8-flash`; cukup ubah `GEMINI_MODEL` di Vercel.
 
 ## Arsitektur
 
@@ -41,7 +43,7 @@ Set semua di **Vercel → Project → Settings → Environment Variables**. Jang
 | `TELEGRAM_WEBHOOK_SECRET` | Ya | String acak panjang. Dipakai Telegram untuk membuktikan request asli. |
 | `TELEGRAM_OWNER_ID` | Ya setelah setup | ID Telegram kamu. Bot hanya melayani akun ini. |
 | `GEMINI_API_KEY` | Ya | API key dari Google AI Studio. |
-| `GEMINI_MODEL` | Tidak | Default `gemini-3.1-flash`. |
+| `GEMINI_MODEL` | Tidak | Default `gemini-3.1-flash-lite`. |
 | `BOT_PERSONA` | Tidak | Override system prompt default. |
 
 Generate webhook secret:
@@ -57,7 +59,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 3. Ambil Telegram ID kamu lewat @userinfobot.
 4. Push folder ini ke repo GitHub `livingtogether745-cmd/SPY`.
 5. Buka <https://vercel.com/new>, import repo tersebut.
-6. Tambahkan environment variables di atas. Untuk `GEMINI_MODEL`, isi `gemini-3.1-flash`.
+6. Tambahkan environment variables di atas. Untuk `GEMINI_MODEL`, isi `gemini-3.1-flash-lite`.
 7. Deploy. Tunggu sampai dapat URL `https://<project>.vercel.app`.
 8. Daftarkan webhook dari komputer lokal (PowerShell):
 
@@ -94,7 +96,7 @@ Konsekuensi:
 | Gejala | Penyebab umum | Solusi |
 |---|---|---|
 | `401 invalid_webhook_secret` | Secret di Telegram dan Vercel beda | Jalankan ulang `set-webhook` dengan secret yang sama. |
-| `404` dari Gemini | Nama model tidak tersedia | Coba `GEMINI_MODEL=gemini-3-flash` atau cek daftar model di AI Studio. |
+| `404` dari Gemini | Nama model tidak tersedia | Coba `GEMINI_MODEL=gemini-3.5-flash` atau cek daftar model di AI Studio. |
 | `403` / `401` dari Gemini | API key salah, expired, atau bukan API key | Buat key baru di AI Studio. |
 | `429` | Kuota/rate limit | Tunggu atau ganti key/tier. |
 | Bot diam saja | `TELEGRAM_OWNER_ID` bukan akun kamu, atau webhook belum diset | Cek `/id`, cek `getWebhookInfo`, cek Vercel logs. |
