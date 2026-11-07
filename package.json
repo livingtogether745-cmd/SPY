@@ -1,0 +1,15 @@
+{
+  "name": "spy-telegram-bot",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Minimal, auditable Telegram bot with Gemini Flash and Vercel webhook deployment.",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "check": "node --check api/webhook.js && node --check api/health.js && node --check lib/gemini.js && node --check lib/persona.js && node --check lib/security.js && node --check lib/telegram.js && node --check scripts/set-webhook.mjs",
+    "test": "node --test",
+    "set-webhook": "node scripts/set-webhook.mjs"
+  }
+}
