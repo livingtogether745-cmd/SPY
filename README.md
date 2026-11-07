@@ -99,6 +99,7 @@ Konsekuensi:
 | `404` dari Gemini | Nama model tidak tersedia | Coba `GEMINI_MODEL=gemini-3.5-flash` atau cek daftar model di AI Studio. |
 | `403` / `401` dari Gemini | API key salah, expired, atau bukan API key | Buat key baru di AI Studio. |
 | `429` | Kuota/rate limit | Tunggu atau ganti key/tier. |
+| `503` dari Gemini | Model sedang kelebihan beban (high demand) | Bot otomatis mencoba ulang 3x dengan backoff. Kalau terus berulang, ganti `GEMINI_MODEL` ke `gemini-3.5-flash`. |
 | Bot diam saja | `TELEGRAM_OWNER_ID` bukan akun kamu, atau webhook belum diset | Cek `/id`, cek `getWebhookInfo`, cek Vercel logs. |
 | `setWebhook` gagal | URL bukan HTTPS atau belum bisa diakses | Pastikan deploy sukses dan URL `https://.../api/health` mengembalikan `{"ok":true}`. |
 

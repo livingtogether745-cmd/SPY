@@ -29,7 +29,8 @@ No analytics, telemetry, CDN, tracking pixel, external UI, or third-party API is
 - After `TELEGRAM_OWNER_ID` is set, messages from every other account are silently ignored.
 - Before the owner is configured, only `/start` and `/id` are answered; the LLM is never called.
 - Input is truncated to 4000 characters before reaching the LLM.
-- Outbound requests have timeouts (10s Telegram, 25s Gemini) and the Vercel function is capped at 60s.
+- Outbound requests have timeouts (10s Telegram, 15s per Gemini attempt) and the Vercel function is capped at 60s.
+- Transient Gemini failures (HTTP 408/425/429/500/502/503/504 and network timeouts) are retried up to 3 times with exponential backoff. Non-retryable errors (e.g. 400/401/403/404) and safety blocks fail immediately.
 
 ## Data handling
 
