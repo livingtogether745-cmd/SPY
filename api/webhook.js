@@ -1,5 +1,5 @@
 import { generateReply } from "../lib/gemini.js";
-import { sendMessage } from "../lib/telegram.js";
+import { sendMessage, startTyping, waitForTyping } from "../lib/telegram.js";
 import { buildSystemPrompt } from "../lib/persona.js";
 import {
   optionalEnv,
@@ -104,10 +104,15 @@ async function handleUpdate(update) {
     return;
   }
 
+  const typing = startTyping(chatId);
+  const startedAt = Date.now();
   try {
     const reply = await generateReply(text, { systemPrompt: buildSystemPrompt() });
+    await waitForTyping(reply.length, Date.now() - startedAt);
+    typing.stop();
     await sendMessage(chatId, reply);
   } catch (error) {
+    typing.stop();
     console.error("[gemini]", error?.message ?? "error tidak dikenal");
     await sendMessage(chatId, GENERIC_ERROR);
   }

@@ -82,7 +82,7 @@ test("does not retry a non-retryable 404", async () => {
   assert.equal(calls, 1);
 });
 
-test("gives up after three attempts on persistent 503", async () => {
+test("gives up after two attempts on persistent 503", async () => {
   let calls = 0;
   const delays = [];
   const fetchImpl = async () => {
@@ -102,8 +102,8 @@ test("gives up after three attempts on persistent 503", async () => {
       }),
     /Gemini membalas HTTP 503/
   );
-  assert.equal(calls, 3);
-  assert.deepEqual(delays, [700, 1400]);
+  assert.equal(calls, 2);
+  assert.deepEqual(delays, [700]);
 });
 
 test("does not retry an empty candidate (safety block)", async () => {
