@@ -3,7 +3,7 @@ import { requireEnv } from "../lib/security.js";
 
 const baseUrl = process.argv[2] || process.env.PUBLIC_BASE_URL || "";
 if (!baseUrl) {
-  console.error("Usage: node scripts/set-webhook.mjs https://your-project.vercel.app");
+  console.error("Cara pakai: node scripts/set-webhook.mjs https://project-kamu.vercel.app");
   process.exit(1);
 }
 
@@ -22,6 +22,6 @@ try {
     last_error_message: info.last_error_message ?? null
   }, null, 2));
 } catch (error) {
-  console.error(`set-webhook failed: ${error?.message ?? "unknown_error"}`);
+  console.error(`set-webhook gagal: ${error?.message ?? "error tidak dikenal"}`);
   process.exitCode = 1;
 }

@@ -77,7 +77,7 @@ test("does not retry a non-retryable 404", async () => {
         fetchImpl,
         sleep: async () => {}
       }),
-    /Gemini HTTP 404/
+    /Gemini membalas HTTP 404/
   );
   assert.equal(calls, 1);
 });
@@ -100,7 +100,7 @@ test("gives up after three attempts on persistent 503", async () => {
           delays.push(ms);
         }
       }),
-    /Gemini HTTP 503/
+    /Gemini membalas HTTP 503/
   );
   assert.equal(calls, 3);
   assert.deepEqual(delays, [700, 1400]);
@@ -121,7 +121,7 @@ test("does not retry an empty candidate (safety block)", async () => {
         fetchImpl,
         sleep: async () => {}
       }),
-    /Gemini returned no text \(SAFETY\)/
+    /Gemini tidak mengembalikan teks \(SAFETY\)/
   );
   assert.equal(calls, 1);
 });

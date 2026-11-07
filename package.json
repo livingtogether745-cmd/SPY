@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Minimal, auditable Telegram bot with Gemini Flash and Vercel webhook deployment.",
+  "description": "Bot Telegram minimalis dengan Gemini Flash dan deploy webhook Vercel.",
   "engines": {
     "node": ">=20"
   },

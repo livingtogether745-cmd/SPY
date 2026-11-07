@@ -19,7 +19,7 @@ export default async function handler(req, res) {
 
   const expectedSecret = optionalEnv("TELEGRAM_WEBHOOK_SECRET");
   if (!expectedSecret) {
-    console.error("[webhook] TELEGRAM_WEBHOOK_SECRET is not configured");
+    console.error("[webhook] TELEGRAM_WEBHOOK_SECRET belum dikonfigurasi");
     res.status(500).json({ ok: false, error: "webhook_secret_not_configured" });
     return;
   }
@@ -42,7 +42,7 @@ export default async function handler(req, res) {
     await handleUpdate(update);
   } catch (error) {
     // Never log message contents or environment values.
-    console.error("[webhook]", error?.message ?? "unknown_error");
+    console.error("[webhook]", error?.message ?? "error tidak dikenal");
   }
 
   // Always acknowledge valid webhook calls so Telegram does not retry in a loop.
@@ -108,7 +108,7 @@ async function handleUpdate(update) {
     const reply = await generateReply(text, { systemPrompt: buildSystemPrompt() });
     await sendMessage(chatId, reply);
   } catch (error) {
-    console.error("[gemini]", error?.message ?? "unknown_error");
+    console.error("[gemini]", error?.message ?? "error tidak dikenal");
     await sendMessage(chatId, GENERIC_ERROR);
   }
 }
