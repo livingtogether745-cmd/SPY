@@ -245,34 +245,7 @@ async function respondWithChat({ session, userId, chatId, text, typing: existing
   const startedAt = existingStartedAt || Date.now();
   const typing = existingTyping || startTyping(chatId);
 
-  // Memory extraction and summarization run in parallel with generation, so
-  // they never add a second serial LLM call to the response path.
-  const memoryPromise = shouldExtractMemory({
-    text,
-    userMessageCount: session.counters.userMessages
-  })
-    ? extractMemoryPatch({
-        memory: session.memory,
-        recentMessages: buildRecentTranscript(session.history, 6),
-        userText: text,
-        generateJsonImpl: generateJson
-      }).catch((error) => {
-        console.error("[memory]", error?.message ?? "error tidak dikenal");
-        return null;
-      })
-    : Promise.resolve(null);
-
-  const summaryPromise = needsSummary(session.history)
-    ? summarizeHistory({
-        history: session.history,
-        previousSummary: session.summary,
-        generateImpl: generateReply
-      }).catch((error) => {
-        console.error("[summary]", error?.message ?? "error tidak dikenal");
-        return null;
-      })
-    : Promise.resolve(null);
-
+  let safeReply;
   try {
     const rawReply = await generateReply(text, {
       systemPrompt: buildSystemPrompt({
@@ -284,9 +257,50 @@ async function respondWithChat({ session, userId, chatId, text, typing: existing
       maxOutputTokens: 512
     });
 
-    const [memoryPatch, summaryResult] = await Promise.all([memoryPromise, summaryPromise]);
+    safeReply = guardReply(rawReply, { characterName: settings.characterName });
 
-    const safeReply = guardReply(rawReply, { characterName: settings.characterName });
+    // Deliver before any bookkeeping. Memory extraction and summarization used
+    // to block this send for up to 8s after generation had already finished.
+    await waitForTyping(safeReply.length, Date.now() - startedAt);
+    typing.stop();
+    await sendMessage(chatId, safeReply);
+  } catch (error) {
+    typing.stop();
+    console.error("[gemini]", error?.message ?? "error tidak dikenal");
+    await sendMessage(chatId, GENERIC_ERROR);
+    return;
+  }
+
+  // Post-delivery work. It starts only after the reply is sent so it cannot
+  // compete with the generation request or delay the user-visible response.
+  try {
+    const memoryPromise = shouldExtractMemory({
+      text,
+      userMessageCount: session.counters.userMessages
+    })
+      ? extractMemoryPatch({
+          memory: session.memory,
+          recentMessages: buildRecentTranscript(session.history, 6),
+          userText: text,
+          generateJsonImpl: generateJson
+        }).catch((error) => {
+          console.error("[memory]", error?.message ?? "error tidak dikenal");
+          return null;
+        })
+      : Promise.resolve(null);
+
+    const summaryPromise = needsSummary(session.history)
+      ? summarizeHistory({
+          history: session.history,
+          previousSummary: session.summary,
+          generateImpl: generateReply
+        }).catch((error) => {
+          console.error("[summary]", error?.message ?? "error tidak dikenal");
+          return null;
+        })
+      : Promise.resolve(null);
+
+    const [memoryPatch, summaryResult] = await Promise.all([memoryPromise, summaryPromise]);
 
     if (memoryPatch) session.memory = mergeMemory(session.memory, memoryPatch);
     if (summaryResult) {
@@ -297,14 +311,9 @@ async function respondWithChat({ session, userId, chatId, text, typing: existing
     appendExchange(session, text, safeReply);
     session.counters.userMessages += 1;
     await safeSave(userId, session);
-
-    await waitForTyping(safeReply.length, Date.now() - startedAt);
-    typing.stop();
-    await sendMessage(chatId, safeReply);
   } catch (error) {
-    typing.stop();
-    console.error("[gemini]", error?.message ?? "error tidak dikenal");
-    await sendMessage(chatId, GENERIC_ERROR);
+    // The user already has the reply; never send a second error message here.
+    console.error("[post-reply]", error?.message ?? "error tidak dikenal");
   }
 }
 

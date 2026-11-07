@@ -138,7 +138,7 @@ Set semua di **Vercel → Project → Settings → Environment Variables**. Jang
 | `TELEGRAM_PUBLIC` | Tidak | `true` untuk membuka bot ke semua orang. Tetap ada rate limit. |
 | `TELEGRAM_OWNER_ID` | Tidak | Mode lama: hanya owner. Dipakai jika `TELEGRAM_ALLOWED_IDS` kosong. |
 | `GEMINI_API_KEY` | Ya | API key Google AI Studio. |
-| `GEMINI_MODEL` | Tidak | Default kode `gemini-3.1-flash-lite`; produksi disarankan `gemini-3.5-flash`. |
+| `GEMINI_MODEL` | Tidak | Default kode `gemini-3.5-flash` (model tercepat yang terukur). Bisa diganti lewat env. |
 | `CHARACTER_NAME` | Tidak | Nama default karakter. Default `Ayu`. |
 | `DEFAULT_PRESET` | Tidak | `extra_clingy`, `sweet`, atau `playful`. Default `sweet`. |
 | `BOT_PERSONA` | Tidak | Override system prompt. Placeholder: `{{name}}`, `{{user}}`, `{{memory}}`, `{{summary}}`, `{{now}}`. |

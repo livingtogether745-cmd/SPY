@@ -25,6 +25,7 @@ let sent = [];
 let edited = [];
 let updateId = 1000;
 let forceDisclosure = false;
+let memoryGate = null;
 
 function jsonResponse(body) {
   return {
@@ -95,11 +96,21 @@ async function invoke(update) {
   return res;
 }
 
+async function waitUntil(predicate, timeoutMs = 3000) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    if (predicate()) return;
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  }
+  throw new Error("waitUntil timeout");
+}
+
 beforeEach(() => {
   clearMemoryStoreForTests();
   sent = [];
   edited = [];
   forceDisclosure = false;
+  memoryGate = null;
   process.env.TELEGRAM_PUBLIC = "true";
   delete process.env.TELEGRAM_ALLOWED_IDS;
   delete process.env.TELEGRAM_OWNER_ID;
@@ -109,6 +120,7 @@ beforeEach(() => {
 
     if (url.includes("generativelanguage.googleapis.com")) {
       if (body.generationConfig?.responseMimeType === "application/json") {
+        if (memoryGate) await memoryGate;
         return jsonResponse({
           candidates: [
             {
@@ -234,4 +246,28 @@ test("owner-only mode silently ignores other users", async () => {
 
   await invoke(messageUpdate("halo", 123));
   assert.equal(sent.length, 0);
+});
+
+test("the reply is delivered before memory extraction finishes", async () => {
+  let releaseMemory;
+  memoryGate = new Promise((resolve) => {
+    releaseMemory = resolve;
+  });
+
+  const pending = invoke(messageUpdate("namaku Raka, aku suka kopi"));
+
+  try {
+    // The main reply must arrive while the JSON extraction call is still
+    // blocked. If the pipeline awaits memory first, this times out.
+    await waitUntil(() => sent.length > 0);
+    assert.match(sent.at(-1).text, /haii kamuuu/);
+  } finally {
+    releaseMemory();
+    memoryGate = null;
+    await pending;
+  }
+
+  await invoke(messageUpdate("/memory"));
+  assert.match(sent.at(-1).text, /Raka/);
+  assert.match(sent.at(-1).text, /kopi/);
 });
