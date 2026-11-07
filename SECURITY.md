@@ -2,7 +2,7 @@
 
 ## Audit scope
 
-The original `SPY` repository was empty at audit time (0 commits, 0 files), so there was no existing code, dependency tree, or network behavior to review. This project was created as a minimal replacement and audited by static review plus local unit tests. It has **not** been run against live Telegram or Gemini endpoints in this environment.
+The original `SPY` repository was empty at audit time (0 commits, 0 files), so there was no existing code, dependency tree, or network behavior to review. This project was created as a minimal replacement and audited by static review plus local unit tests. It was then verified live: the Gemini key authenticated, model listing succeeded, `gemini-3.1-flash-lite` generated a reply, the Telegram webhook was registered, and a synthetic owner update round-tripped through Vercel and Gemini back to Telegram.
 
 ## Outbound network calls
 

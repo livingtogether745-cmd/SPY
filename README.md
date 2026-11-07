@@ -12,7 +12,7 @@ Repo awal (`livingtogether745-cmd/SPY`) **kosong**: 0 commit dan 0 file. Karena 
 - Tanpa hardcoded API key atau token.
 - Hanya dua host keluar: `api.telegram.org` dan `generativelanguage.googleapis.com`.
 
-Kode sudah lolos `npm run check` (syntax) dan `npm test` (unit test lokal). Integrasi Gemini juga sudah diverifikasi live: API key valid, daftar model berhasil dibaca, dan model `gemini-3.1-flash-lite` membalas dengan benar. Koneksi Telegram **belum diverifikasi** karena masih menunggu bot token dari @BotFather.
+Kode sudah lolos `npm run check` (syntax) dan `npm test` (unit test lokal). Integrasi Gemini dan Telegram juga sudah diverifikasi live: API key valid, `gemini-3.1-flash-lite` membalas dengan benar, webhook terdaftar, dan pesan uji berhasil sampai kembali ke chat Telegram.
 
 Catatan model: Google tidak menyediakan ID `gemini-3.1-flash` (tanpa suffix). Model Flash 3.1 yang benar-benar ada adalah `gemini-3.1-flash-lite`. Kalau mau model yang lebih baru, tersedia `gemini-3.5-flash` dan `gemini-3.8-flash`; cukup ubah `GEMINI_MODEL` di Vercel.
 
