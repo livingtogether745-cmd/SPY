@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { generateReply } from "../lib/gemini.js";
+import { buildContents, generateJson, generateReply } from "../lib/gemini.js";
 
 function response(status, body) {
   return {
@@ -124,4 +124,66 @@ test("does not retry an empty candidate (safety block)", async () => {
     /Gemini tidak mengembalikan teks \(SAFETY\)/
   );
   assert.equal(calls, 1);
+});
+
+test("buildContents sends bounded history and ends with the current message", () => {
+  const history = Array.from({ length: 30 }, (_, index) => ({
+    role: index % 2 === 0 ? "user" : "model",
+    text: `pesan ${index}`
+  }));
+
+  const contents = buildContents(history, "pesan baru");
+
+  assert.ok(contents.length <= 17);
+  assert.equal(contents[0].role, "user");
+  assert.equal(contents[contents.length - 1].role, "user");
+  assert.match(contents[contents.length - 1].parts[0].text, /pesan baru/);
+});
+
+test("buildContents drops the oldest turns when the character budget is exceeded", () => {
+  const history = Array.from({ length: 16 }, (_, index) => ({
+    role: index % 2 === 0 ? "user" : "model",
+    text: "x".repeat(2000)
+  }));
+
+  const contents = buildContents(history, "halo");
+  const total = contents.reduce((sum, entry) => sum + entry.parts[0].text.length, 0);
+
+  assert.ok(total <= 12_000);
+  assert.equal(contents[contents.length - 1].role, "user");
+  assert.match(contents[contents.length - 1].parts[0].text, /halo/);
+});
+
+test("generateReply enables JSON response mode when requested", async () => {
+  let body;
+  const fetchImpl = async (_url, init) => {
+    body = JSON.parse(init.body);
+    return response(200, OK_BODY);
+  };
+
+  await generateReply("kembalikan json", {
+    apiKey: "test",
+    model: "gemini-3.1-flash-lite",
+    json: true,
+    fetchImpl,
+    sleep: async () => {}
+  });
+
+  assert.equal(body.generationConfig.responseMimeType, "application/json");
+});
+
+test("generateJson parses a fenced JSON reply", async () => {
+  const fetchImpl = async () =>
+    response(200, {
+      candidates: [{ content: { parts: [{ text: '```json\n{"profile":{"nickname":"Raka"}}\n```' }] } }]
+    });
+
+  const parsed = await generateJson("extract", {
+    apiKey: "test",
+    model: "gemini-3.1-flash-lite",
+    fetchImpl,
+    sleep: async () => {}
+  });
+
+  assert.deepEqual(parsed, { profile: { nickname: "Raka" } });
 });

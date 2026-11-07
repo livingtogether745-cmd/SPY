@@ -1,6 +1,14 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { secretsMatch, truncate } from "../lib/security.js";
+import {
+  isSetupMode,
+  isUserAllowed,
+  parseIdList,
+  resolveAccessFromEnv,
+  sanitizeDisplayName,
+  secretsMatch,
+  truncate
+} from "../lib/security.js";
 import { buildSystemPrompt } from "../lib/persona.js";
 import { DEFAULT_GEMINI_MODEL } from "../lib/gemini.js";
 
@@ -26,4 +34,56 @@ test("default persona is Indonesian and does not leak secrets", () => {
 
 test("default Gemini model is a real Gemini 3.1 Flash model", () => {
   assert.equal(DEFAULT_GEMINI_MODEL, "gemini-3.1-flash-lite");
+});
+
+test("parseIdList accepts commas, spaces, and rejects junk", () => {
+  assert.deepEqual(parseIdList("1, 2 3"), ["1", "2", "3"]);
+  assert.deepEqual(parseIdList("abc, -100"), ["-100"]);
+  assert.deepEqual(parseIdList(undefined), []);
+});
+
+test("sanitizeDisplayName strips control characters and caps length", () => {
+  assert.equal(sanitizeDisplayName("  Naya\u0000  "), "Naya");
+  assert.equal(sanitizeDisplayName("abcdefghij", 4), "abcd");
+  assert.equal(sanitizeDisplayName(null), "");
+});
+
+test("access policy supports allowlists, public mode, owner fallback, and setup mode", () => {
+  const original = {
+    allowed: process.env.TELEGRAM_ALLOWED_IDS,
+    owner: process.env.TELEGRAM_OWNER_ID,
+    public: process.env.TELEGRAM_PUBLIC
+  };
+
+  try {
+    delete process.env.TELEGRAM_ALLOWED_IDS;
+    delete process.env.TELEGRAM_OWNER_ID;
+    delete process.env.TELEGRAM_PUBLIC;
+    assert.equal(isSetupMode(resolveAccessFromEnv()), true);
+
+    process.env.TELEGRAM_OWNER_ID = "100";
+    let access = resolveAccessFromEnv();
+    assert.equal(isSetupMode(access), false);
+    assert.equal(isUserAllowed("100", access), true);
+    assert.equal(isUserAllowed("200", access), false);
+
+    process.env.TELEGRAM_ALLOWED_IDS = "100,200";
+    process.env.TELEGRAM_PUBLIC = "true";
+    access = resolveAccessFromEnv();
+    assert.equal(isUserAllowed("200", access), true);
+    assert.equal(isUserAllowed("999", access), false);
+
+    delete process.env.TELEGRAM_ALLOWED_IDS;
+    access = resolveAccessFromEnv();
+    assert.equal(isUserAllowed("999", access), true);
+  } finally {
+    for (const [key, value] of Object.entries({
+      TELEGRAM_ALLOWED_IDS: original.allowed,
+      TELEGRAM_OWNER_ID: original.owner,
+      TELEGRAM_PUBLIC: original.public
+    })) {
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    }
+  }
 });

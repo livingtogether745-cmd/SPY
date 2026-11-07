@@ -8,7 +8,7 @@
     "node": ">=20"
   },
   "scripts": {
-    "check": "node --check api/webhook.js && node --check api/health.js && node --check lib/gemini.js && node --check lib/persona.js && node --check lib/security.js && node --check lib/telegram.js && node --check scripts/set-webhook.mjs",
+    "check": "node --check api/webhook.js && node --check api/health.js && node --check lib/gemini.js && node --check lib/persona.js && node --check lib/security.js && node --check lib/telegram.js && node --check lib/store.js && node --check lib/memory.js && node --check lib/session.js && node --check lib/presets.js && node --check lib/guard.js && node --check lib/commands.js && node --check scripts/set-webhook.mjs",
     "test": "node --test",
     "set-webhook": "node scripts/set-webhook.mjs"
   }
